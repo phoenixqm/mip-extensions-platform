@@ -1,0 +1,15 @@
+{
+  "name": "mip-ptg-multi-pay",
+  "version": "1.0.2",
+  "description": "菩提果熊掌号多种支付方式组件",
+  "contributors": [
+    {
+      "name": "Qi Ming",
+      "email": "qiming@putibaby.com"
+    }
+  ],
+  "engines": {
+    "mip": ">=1.1.0"
+  },
+  "author": "Qi Ming <qiming@putibaby.com>"
+}

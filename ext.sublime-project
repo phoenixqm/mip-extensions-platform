@@ -1,0 +1,17 @@
+{
+	"folders":
+	[
+		{
+			"path": "./mip-ptg-login-xzh"
+		},
+		{
+			"path": "./mip-ptg-multi-pay"
+		},
+		{
+			"path": "./mip-ptg-orderpay"
+		},		
+		{
+			"path": "./mip-lxn-orderpay"
+		},		
+	]
+}

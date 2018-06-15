@@ -1,0 +1,16 @@
+{
+  "name": "mip-ptg-login-xzh",
+  "version": "1.2.1",
+  "description": "MIP网站菩提果母婴熊掌号登录",
+  "contributors": [
+    {
+      "name": "Qi Ming",
+      "email": "qiming@putibaby.com"
+    }
+  ],
+  "engines": {
+    "mip": ">=1.1.0"
+  },
+  "main": "mip-ptg-login-xzh.js",
+  "author": "Qi Ming <qiming@putibaby.com>"
+}
