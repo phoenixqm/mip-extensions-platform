@@ -118,6 +118,7 @@ define(function (require) {
             if (!action) {
                 return;
             }
+						console.log(action);
             switch (action.handler) {
                 case 'addPostData':
                     if (typeof action.arg === 'string') {
@@ -130,6 +131,7 @@ define(function (require) {
                     self.setPayId(action.arg);
                     break;
                 case 'setSessionFrom':
+										console.log(action.arg);
                     self.sessionfrom = action.arg;
                     break;
             }
@@ -198,6 +200,9 @@ define(function (require) {
         return node;
     };
 
+    Pay.prototype.setSessionFrom = function (from) {
+				this.sessionfrom = from;
+		}
 
     Pay.prototype.setPayId = function (payId) {
         if (!payId || typeof payId !== 'string') {
@@ -240,6 +245,9 @@ define(function (require) {
         this.data.payInfos.some(function (pay) {
             return payInfo = pay.selected && pay;
         });
+
+        console.log(self.sessionfrom);
+				self.sessionId = util.store.get(self.sessionfrom);
         util.post(payInfo.endpoint, fn.extend({}, self.data.sendData, {
             sessionId: self.sessionId,
             state: JSON.stringify({
@@ -373,7 +381,6 @@ define(function (require) {
      * @param  {Object} eventdata 事件对象
      */
     Pay.prototype.trigger = function (name, eventdata) {
-        this.sessionId = util.store.get(this.sessionfrom);
         var event = {
             sessionId: this.sessionId,
             data: this.data.sendData
