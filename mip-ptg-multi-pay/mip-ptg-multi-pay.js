@@ -118,7 +118,7 @@ define(function (require) {
             if (!action) {
                 return;
             }
-						console.log(action);
+            console.log(action);
             switch (action.handler) {
                 case 'addPostData':
                     if (typeof action.arg === 'string') {
@@ -131,7 +131,7 @@ define(function (require) {
                     self.setPayId(action.arg);
                     break;
                 case 'setSessionFrom':
-										console.log(action.arg);
+                    console.log(action.arg);
                     self.sessionfrom = action.arg;
                     break;
             }
@@ -201,8 +201,8 @@ define(function (require) {
     };
 
     Pay.prototype.setSessionFrom = function (from) {
-				this.sessionfrom = from;
-		}
+        this.sessionfrom = from;
+    }
 
     Pay.prototype.setPayId = function (payId) {
         if (!payId || typeof payId !== 'string') {
@@ -247,7 +247,7 @@ define(function (require) {
         });
 
         console.log(self.sessionfrom);
-				self.sessionId = util.store.get(self.sessionfrom);
+        self.sessionId = util.store.get(self.sessionfrom);
         util.post(payInfo.endpoint, fn.extend({}, self.data.sendData, {
             sessionId: self.sessionId,
             state: JSON.stringify({
