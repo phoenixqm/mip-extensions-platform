@@ -129,6 +129,9 @@ define(function (require) {
                 case 'setPayId':
                     self.setPayId(action.arg);
                     break;
+                case 'setSessionFrom':
+                    self.sessionfrom = action.arg;
+                    break;
             }
         });
 
@@ -194,6 +197,7 @@ define(function (require) {
 
         return node;
     };
+
 
     Pay.prototype.setPayId = function (payId) {
         if (!payId || typeof payId !== 'string') {
@@ -369,6 +373,7 @@ define(function (require) {
      * @param  {Object} eventdata 事件对象
      */
     Pay.prototype.trigger = function (name, eventdata) {
+        this.sessionId = util.store.get(this.sessionfrom);
         var event = {
             sessionId: this.sessionId,
             data: this.data.sendData
