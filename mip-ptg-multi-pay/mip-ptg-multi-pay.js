@@ -208,10 +208,11 @@ define(function (require) {
         if (!payId || typeof payId !== 'string') {
             return;
         }
-
+        var that = this;
         this.data.payInfos.forEach(function (payInfo, idx) {
             if (payInfo.id === payId) {
                 payInfo.selected = true;
+                that.pay_type = payId;
             }
             else {
                 payInfo.selected = false;
@@ -250,6 +251,7 @@ define(function (require) {
         self.sessionId = util.store.get(self.sessionfrom);
         util.post(payInfo.endpoint, fn.extend({}, self.data.sendData, {
             sessionId: self.sessionId,
+            pay_type: self.pay_type,
             state: JSON.stringify({
                 r: Date.now(),
                 url: location.href

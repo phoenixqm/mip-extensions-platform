@@ -11,6 +11,15 @@
 			"path": "./mip-ptg-orderpay"
 		},		
 		{
+			"path": "./mip-ptg-order-list"
+		},		
+		{
+			"path": "./mip-ptg-edit-contract"
+		},		
+		{
+			"path": "./mip-ptg-show-contract"
+		},		
+		{
 			"path": "./mip-lxn-orderpay"
 		},		
 	]

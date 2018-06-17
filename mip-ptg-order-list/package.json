@@ -1,0 +1,15 @@
+{
+    "name": "mip-ptg-order-list",
+    "version": "1.0.0",
+    "description": "菩提果月嫂育儿嫂订单列表",
+    "contributors": [
+        {
+            "name": "Qi Ming",
+            "email": "qiming@putibaby.com"
+        }
+    ],
+    "engines": {
+        "mip": ">=1.1.0"
+    },
+    "author": "Qi Ming <qiming@putibaby.com>"
+}
