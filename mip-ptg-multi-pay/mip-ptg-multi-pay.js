@@ -396,7 +396,7 @@ define(function (require) {
      * @param {string} text 输出文本
      */
     Pay.prototype.error = function (text) {
-        console.error('[mip-multi-pay] ', text, this.element);
+        console.error('[mip-ptg-multi-pay] ', text, this.element);
     };
 
     /**
