@@ -6,7 +6,10 @@
 define(function (require) {
     'use strict';
     var $ = require('zepto');
-    var customElement = require('customElement').create();
+    var fn = require('util').fn;
+    var util = require('./util');
+    var mustache = require('mip-mustache/mustache');
+    var OrderList = require('customElement').create();
     setHtmlRem();
 
     function setHtmlRem() {
@@ -57,132 +60,125 @@ define(function (require) {
         }
         return format;
     }
+   /**
+     * 初始化
+     */
+    OrderList.prototype.init = function () {
+        var self = this;
 
+        /**
+         * 会话标识
+         *
+         * @type {string}
+         */
+        self.sessionId = null;
+
+        /**
+         * 支付提交数据
+         *
+         * @type {Object} { payInfos:[{ endpoint: string, id:string type?: nomal|weixin|alipay,  }] }
+         */
+        self.data = {
+            error: '',
+            errorTime: 2000
+        };
+
+        /**
+         * 用户配置数据
+         *
+         * @type {Object}
+         */
+        // self.config = self.element.dataset;
+
+        // 检查配置数据
+        // self.checkConfig();
+
+        // 初始化组件内 <script type="application/json"> 配置合并到 this.data 中
+        self.initJSON();
+
+
+        // 注入设置会话标识接口
+        self.addEventAction('setSessionId', function (event) {
+            self.sessionId = event.sessionId;
+        });
+
+        // 注入追加数据接口
+        self.addEventAction('addPostData', function (event) {
+            self.addPostData(event.data);
+        }); 
+    };
     /**
      * 第一次进入可视区回调，只会执行一次
      */
-    customElement.prototype.firstInviewCallback = function () {
-        // TODO
+    OrderList.prototype.firstInviewCallback = function () {
+        this.render();
         var ele = this.element;
-        $('body').css({
-            height: '100% !important'
+		}
+
+    /**
+     * 输出错误信息到控制台
+     *
+     * @param {string} text 输出文本
+     */
+    OrderList.prototype.error = function (text) {
+        console.error('[mip-ptg-multi-pay] ', text, this.element);
+    };
+
+    /**
+     * 注入组件中的 JSON 配置到数据
+     */
+    OrderList.prototype.initJSON = function () {
+        var self = this;
+        var scripts = self.element.querySelectorAll('script[type="application/json"]');
+
+        [].slice.call(scripts).forEach(function (script) {
+            fn.extend(true, self.data, util.parseJSON(script.innerText));
         });
+    };
 
-        // 搬家时间
-        var moveTime = ele.querySelector('#move-time');
-        // 搬出地址
-        var moveOut = ele.querySelector('#move-out');
-        // 搬出电梯
-        var outDianti = ele.querySelector('#out-dianti');
-        // 车型
-        var carType = ele.querySelector('#car-type');
-        // 搬入地址
-        var moveIn = ele.querySelector('#move-in');
-        // 搬入电梯
-        var inDianti = ele.querySelector('#in-dianti');
+    /**
+     * 渲染组件内的模板内容
+     */
+    OrderList.prototype.render = function () {
+        var self = this;
+        var data = this.data;
+				console.log(data)
+        var elements = self.element.querySelectorAll('template[type="mip-mustache"]');
 
-        var pilllist = ele.querySelector('#pilllist');
-        var orderMsg = localStorage.getItem('ordermsg');
+        [].slice.call(elements).forEach(function (el) {
+            var html = mustache.render(el.innerHTML, data).trim();
+            self.getElementByTemplate(el).innerHTML = html;
+        });
+    };
 
-        if (orderMsg !== null) {
-            orderMsg = JSON.parse(orderMsg);
-            // 账单数据
-            var pilllistData = orderMsg.billList;
-            // 账单html
-            var html = '';
-
-            // 时间赋值
-            moveTime.innerHTML = formate(new Date(orderMsg.TransTime), 'MM月dd日- hh:mm');
-            // 搬家地址赋值
-            orderMsg.poiList.forEach(function (item) {
-                if (item.deliverType === 1) {
-                    moveOut.innerHTML = item.deliverAddress;
-                }
-                else {
-                    moveIn.innerHTML = item.deliverAddress;
-                }
-            });
-            // 搬出电梯
-            if (Number(orderMsg.start_stairs_num.code) === 0) {
-                outDianti.innerHTML = '有电梯';
-            }
-            else {
-                outDianti.innerHTML = '无电梯';
-            }
-            // 搬入电梯
-            if (Number(orderMsg.end_stairs_num.code) === 0) {
-                inDianti.innerHTML = '有电梯';
-            }
-            else {
-                inDianti.innerHTML = '无电梯';
-            }
-
-            // 车型
-            switch (orderMsg.CarType) {
-                case 3:
-                    carType.innerHTML = '小面';
-                    break;
-                case 2:
-                    carType.innerHTML = '金杯';
-                    break;
-                case 20:
-                    carType.innerHTML = '箱货';
-                    break;
-                default:
-                    break;
-            }
-            // 详情列表赋值
-            for (var i = 0; i < pilllistData.length; i++) {
-                if (pilllistData[i].title === '合计') {
-                    html += '<li><span>' + pilllistData[i].title
-                        + '</span><span class="total right">'
-                        + pilllistData[i].content
-                        + '</span></li>';
-                }
-                else {
-                    html += '<li><span>' + pilllistData[i].title
-                        + '</span><span class="right">'
-                        + pilllistData[i].content
-                        + '</span></li>';
-                }
-            }
-
-            // 订单详情
-            pilllist.innerHTML = html;
+    /**
+     * 使用 template 元素获取对应缓存元素
+     *
+     * @param  {HTMLElement} el 模板元素
+     * @return {HTMLElement}
+     */
+    OrderList.prototype.getElementByTemplate = function (el) {
+        if (el.dataset.id && el.nextElementSibling && el.nextElementSibling.id === el.dataset.id) {
+            return el.nextElementSibling;
         }
 
-        var surePay = ele.querySelector('#sure-pay');
-        surePay.addEventListener('click', function () {
-            // console.log('点击');
-            // sessionid KEY
-            var keys = 'mip-login-xzh:sessionId://www.lanxiniu.com/Baidu/back';
-            var sessionid = localStorage.getItem(keys);
-            var ordername = orderMsg.OrderNum;
-            //   提交参数
-            var PARAMS = {};
-            PARAMS.token = sessionid;
-            PARAMS.orderNum = ordername;
-            //   创建表单提交
-            var temp = document.createElement('form');
-            temp.action = 'https://mip.putibaby.com/baidu/pay';
-            temp.method = 'post';
-            temp.style.display = 'none';
+        var id = 'mustache-id-' + Date.now();
+        var node = document.createElement('div');
+        var parent = el.parentNode;
 
-            for (var x in PARAMS) {
-                if (PARAMS.hasOwnProperty(x)) {
-                    var opt = document.createElement('textarea');
-                    opt.name = x;
-                    opt.value = PARAMS[x];
-                    temp.appendChild(opt);
-                }
+        // 设置变量
+        node.id = id;
+        el.setAttribute('data-id', id);
 
-            }
+        if (parent.lastChild === el) {
+            parent.appendChild(node);
+        } else {
+            parent.insertBefore(node, el.nextSibling);
+        }
 
-            document.body.appendChild(temp);
-            temp.submit();
-
-        }, false);
-
+        return node;
     };
-    return customElement;
+
+
+    return OrderList;
 });
