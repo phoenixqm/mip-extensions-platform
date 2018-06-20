@@ -8,6 +8,9 @@
 			"path": "./mip-ptg-multi-pay"
 		},
 		{
+			"path": "./mip-ptg-submit-ph"
+		},		
+		{
 			"path": "./mip-ptg-orderpay"
 		},		
 		{
