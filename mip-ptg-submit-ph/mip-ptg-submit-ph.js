@@ -163,6 +163,7 @@ define(function (require) {
          */
         self.sessionId = null;
 
+        self.count_down = 0; // 倒计时
 
         self.data = {
             error: '',
@@ -190,18 +191,34 @@ define(function (require) {
         self.addEventAction('addPostData', function (event) {
             self.addPostData(event.data);
         }); 
+
+        setInterval(self.changeCountDown_, 1000);
     };
 
-
+    SubmitPH.prototype.changeCountDown_ = function() {
+        if (this.count_down <= 0) {
+            return;
+        } else if (this.count_down == 1) {
+            $('#smsSend').html('重新获取验证码');
+            this.count_down = 0;
+            return;
+        } else if (this.count_down > 0) {
+            $('#smsSend').html(this.count_down + 's后重新获取');
+            this.count_down -= 1;
+            return;
+        }
+    }
 
     SubmitPH.prototype.sendCode_ = function(ph) {
         //this.setState({'error': null });
+        var self = this;
 
         if(!/^1\d{10}$/.test(ph)) {
             alert('错误的手机号,仅支持中国大陆手机号');
             return;
         }
 
+        this.phone_number = ph;
 
         // API.sendPhoneNumberVerifySmsWithGt(p, function(isOk, err) {
         //     if(!isOk) {
@@ -216,38 +233,79 @@ define(function (require) {
         // }.bind(this));
 
         API.sendPhoneNumberVerifySms(ph, function(isOk, err) {
-         if(!isOk) {
-             alert(err);
-             return;
-         }
-         // this.setState({
-         //     'count_down': 60
-         // });
+            if(!isOk) {
+                alert(err);
+                return;
+            }
+            // this.setState({
+            //     'count_down': 60
+            // });
+            self.count_down = 60;
+
         }.bind(this));
     },
 
+    SubmitPH.prototype.verifyCode_ = function(code) {
+
+        if(this.count_down < 0) {
+            alert('请先获取验证码');
+            return;
+        }
+
+        var p = this.phone_number;
+        if(!/^1\d{10}$/.test(p)) {
+            alert('错误的手机号');
+            return;
+        }
+
+        if(!/^\d+$/.test(code)) {
+            alert('错误的验证码');
+            return;
+        }
+        this.code = code;
+
+        var self = this;
+
+        API.verifyPhoneNumber(p, c, function(isOk, err) {
+            if(!isOk) {
+                alert('未知错误');
+                return;
+            }
+
+            var redirect = function() {
+                var url = '/do_login?to=' + encodeURIComponent(self.redirect_to);
+                self.location.href = url;
+            }.bind(this);
+
+            redirect();
+
+        }.bind(this));
+    }
 
     /**
      * 第一次进入可视区回调，只会执行一次
      */
     SubmitPH.prototype.firstInviewCallback = function () {
-			  var that = this;
+			  var self = this;
         this.render();
         var ele = this.element;
-        // $('body').css({
-        //     height: '100% !important'
-        // });
+        $('body').css({
+            height: '100% !important'
+        });
 
         var smsSend = ele.querySelector('#smsSend');
         smsSend.addEventListener('click', function () {
             console.log(this);
 
-            that.sendCode_($('#ph').val());
+            self.sendCode_($('#ph').val());
         });
         var submitBtn = ele.querySelector('#submitBtn');
         submitBtn.addEventListener('click', function () {
             console.log(this);
-        });        
+            self.redirect_to = $(this).attr('data-redirect');
+            console.log(self.redirect_to);
+            self.verifyCode_($('#code').val());
+        });
     }
 
 
