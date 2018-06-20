@@ -39,12 +39,12 @@ define(function (require) {
 
 
     API.wrapRet_ = function(api, opts, cb) {
-        $.post(api, opts)
-        .done(function(ret) {
+        util.post(api, opts)
+        .then(function(ret) {
             if(ret.success) cb(true, ret.data);
             else cb(false, ret.error);
         })
-        .fail(function(err) {
+        .catch(function(err) {
             cb(false, err);
         });
     }
@@ -107,26 +107,21 @@ define(function (require) {
 
 
         $.ajax({
-            url: "/api/gt_register?t=" + (new Date()).getTime(), // 加随机数防止缓存
+            url: "/api/gt_register?t=" + (new Date()).getTime(), 
             type: "get",
             dataType: "json",
             success: function (ret) {
                 console.log(ret);
                 var data = ret.data;
 
-                // 调用 initGeetest 进行初始化
-                // 参数1：配置参数
-                // 参数2：回调，回调的第一个参数验证码对象，之后可以使用它调用相应的接口
                 initGeetest({
-                    // 以下 4 个配置参数为必须，不能缺少
                     gt: data.gt,
                     challenge: data.challenge,
-                    offline: !data.success, // 表示用户后台检测极验服务器是否宕机
-                    new_captcha: data.new_captcha, // 用于宕机时表示是新验证码的宕机
+                    offline: !data.success, 
+                    new_captcha: data.new_captcha, 
 
-                    product: "bind", // 产品形式，包括：float，popup
+                    product: "bind", 
                     width: "300px"
-                    // 更多配置参数说明请参见：http://docs.geetest.com/install/client/web-front/
                 }, handler);
 
             }
@@ -199,8 +194,8 @@ define(function (require) {
 
 
 
-    SubmitPH.prototype.sendCode_: function(ph) {
-        this.setState({'error': null });
+    SubmitPH.prototype.sendCode_ = function(ph) {
+        //this.setState({'error': null });
 
         if(!/^1\d{10}$/.test(ph)) {
             alert('错误的手机号,仅支持中国大陆手机号');
@@ -236,6 +231,7 @@ define(function (require) {
      * 第一次进入可视区回调，只会执行一次
      */
     SubmitPH.prototype.firstInviewCallback = function () {
+			  var that = this;
         this.render();
         var ele = this.element;
         // $('body').css({
@@ -246,7 +242,7 @@ define(function (require) {
         smsSend.addEventListener('click', function () {
             console.log(this);
 
-            this.sendCode_($('#ph').value());
+            that.sendCode_($('#ph').val());
         });
         var submitBtn = ele.querySelector('#submitBtn');
         submitBtn.addEventListener('click', function () {
