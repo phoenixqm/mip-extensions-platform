@@ -32,6 +32,129 @@ define(function (require) {
         setInterval(a.changePage, 1000);
     }
 
+
+
+
+    var API = {};
+
+
+    API.wrapRet_ = function(api, opts, cb) {
+        $.post(api, opts)
+        .done(function(ret) {
+            if(ret.success) cb(true, ret.data);
+            else cb(false, ret.error);
+        })
+        .fail(function(err) {
+            cb(false, err);
+        });
+    }
+
+    API.sendPhoneNumberVerifySms = function(phoneNumber, cb) {
+        if(!/^1\d{10}$/.test(phoneNumber)) {
+            cb(false, '错误的手机号');
+            return;
+        }
+
+        API.wrapRet_(
+            '/api/send_sms', {
+                'phone_number': phoneNumber
+            }, 
+            cb);
+    }
+
+
+    API.sendPhoneNumberVerifySmsWithGt = function(phoneNumber, cb) {
+        if(!/^1\d{10}$/.test(phoneNumber)) {
+            cb(false, '错误的手机号');
+            return;
+        }
+
+        // if (window.gt_loading) {
+        //  setTimeout(function(){
+        //      window.gt_loading = false;
+        //  }, 100);
+        //  return;
+        // }
+
+
+
+
+        var handler = function (captchaObj) {
+            // captchaObj.appendTo('#captcha');
+            captchaObj.onReady(function () {
+                $("#wait").hide();
+                captchaObj.verify();
+            }).onSuccess(function () {
+                var result = captchaObj.getValidate();
+                if (!result) {
+                    return alert('请完成验证');
+                }
+                // window.gt_loading = false;
+                API.wrapRet_(
+                    '/api/send_sms_validate', {
+                        'phone_number': phoneNumber,
+                        'geetest_challenge': result.geetest_challenge,
+                        'geetest_validate': result.geetest_validate,
+                        'geetest_seccode': result.geetest_seccode
+                    }, 
+                    cb);
+
+            });
+
+            window.captchaObj = captchaObj;
+
+        };
+
+
+        $.ajax({
+            url: "/api/gt_register?t=" + (new Date()).getTime(), // 加随机数防止缓存
+            type: "get",
+            dataType: "json",
+            success: function (ret) {
+                console.log(ret);
+                var data = ret.data;
+
+                // 调用 initGeetest 进行初始化
+                // 参数1：配置参数
+                // 参数2：回调，回调的第一个参数验证码对象，之后可以使用它调用相应的接口
+                initGeetest({
+                    // 以下 4 个配置参数为必须，不能缺少
+                    gt: data.gt,
+                    challenge: data.challenge,
+                    offline: !data.success, // 表示用户后台检测极验服务器是否宕机
+                    new_captcha: data.new_captcha, // 用于宕机时表示是新验证码的宕机
+
+                    product: "bind", // 产品形式，包括：float，popup
+                    width: "300px"
+                    // 更多配置参数说明请参见：http://docs.geetest.com/install/client/web-front/
+                }, handler);
+
+            }
+        });
+
+
+    }
+
+    API.verifyPhoneNumber = function(phoneNumber, sms, cb) {
+        if(!/^1\d{10}$/.test(phoneNumber)) {
+            cb(false, '错误的手机号');
+            return;
+        }
+
+        if(!/^\d{4,6}$/.test(sms)) {
+            cb(false, '错误的验证码');
+            return;
+        }
+
+        API.wrapRet_(
+            '/api/verify_sms', 
+            {
+                'phone_number': phoneNumber,
+                'sms': sms
+            }, cb);
+    }
+
+
    /**
      * 初始化
      */
@@ -73,6 +196,42 @@ define(function (require) {
             self.addPostData(event.data);
         }); 
     };
+
+
+
+    SubmitPH.prototype.sendCode_: function(ph) {
+        this.setState({'error': null });
+
+        if(!/^1\d{10}$/.test(ph)) {
+            alert('错误的手机号,仅支持中国大陆手机号');
+            return;
+        }
+
+
+        // API.sendPhoneNumberVerifySmsWithGt(p, function(isOk, err) {
+        //     if(!isOk) {
+        //         this.setState({
+        //             'error': err
+        //         });
+        //         return;
+        //     }
+        //     this.setState({
+        //         'count_down': 60
+        //     })
+        // }.bind(this));
+
+        API.sendPhoneNumberVerifySms(ph, function(isOk, err) {
+         if(!isOk) {
+             alert(err);
+             return;
+         }
+         // this.setState({
+         //     'count_down': 60
+         // });
+        }.bind(this));
+    },
+
+
     /**
      * 第一次进入可视区回调，只会执行一次
      */
@@ -86,12 +245,16 @@ define(function (require) {
         var smsSend = ele.querySelector('#smsSend');
         smsSend.addEventListener('click', function () {
             console.log(this);
+
+            this.sendCode_($('#ph').value());
         });
         var submitBtn = ele.querySelector('#submitBtn');
         submitBtn.addEventListener('click', function () {
             console.log(this);
         });        
     }
+
+
 
     /**
      * 输出错误信息到控制台
